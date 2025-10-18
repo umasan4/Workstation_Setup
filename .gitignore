@@ -1,0 +1,19 @@
+# AWS credentials
+.aws/
+credentials
+config
+
+# Terraform state files and variables
+*.tfstate
+*.tfstate.backup
+terraform.tfvars
+*.tfvars
+
+# General secret files
+.env
+*.pem
+*.key
+
+# OS specific files
+.DS_Store
+Thumbs.db
