@@ -1,0 +1,76 @@
+# Bash_Custom
+### 概要
+.bashrcに格納するAliasやPATHコードを管理する
+
+### 1.「.bash_custom」ファイルを作成する
+```bash
+cd ~
+touch .bash_custom
+```
+
+### 2.「.bash_custom」に以下のコードを格納する
+```bash
+# common
+  alias ll='ls -la'
+  alias cc='clear'
+
+# docker
+  alias d='docker'
+  alias di='docker image'
+  alias db='docker buildx build'
+  alias dc='docker container'
+  alias dn='docker network'
+  alias dv='docker volume'
+  alias dC='docker compose'
+  alias de='docker exec -it'
+
+# git
+  alias g='git'
+  alias gb='git branch'
+  alias gc='git clone'
+  alias gC='git commit'
+
+# terraform
+  alias t='terraform'
+  alias tp='terraform plan'
+  alias ta='terraform apply -auto-approve'
+  alias td='terraform destroy -auto-approve'
+  alias tf='terraform fmt'
+#-------------------------------------
+# prompt
+#-------------------------------------
+
+# prompt
+  #export PS1='\u:\w\$ '
+  export PS1='[\W\$] '
+
+# os_version
+  os_file="/etc/os-release"
+  os_version="$(cat ${os_file} | grep PRETTY_NAME | cut -d = -f 2 | sed 's/"//g')"
+
+# login_message
+  echo "-------------------------------------"
+  echo "OS_VERSION : ${os_version}"
+  echo "IP_ADDRESS : $(hostname -I | awk '{print $1}')"
+  echo "HOST_NAME  : $(uname -n)"
+  echo "USER_NAME  : ${USER}"
+  echo "-------------------------------------"
+
+#-------------------------------------
+# tfenv
+#-------------------------------------
+  export PATH="$HOME/.tfenv/bin:$PATH"
+```
+
+### 3.「.bashrc」に以下を追記してPATHを通す
+```bash
+if [ -f ~/.bash_custom ]; then
+  source ~/.bash_custom
+fi
+```
+
+### 4. 現在のシェルに再読み込みする
+```bash
+source ~/.bashrc
+```
+
