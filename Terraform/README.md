@@ -38,7 +38,7 @@ tfenv list-remote
 
 ### 3-2. 最新版をインストール
 
-特に指定がなければ、最新 (latest) バージョンをインストールするのが良い。
+特に指定がなければ、最新（latest）でも良いが、Betaなどのテストバージョンは避ける
 
 ```bash
 tfenv install latest
@@ -58,7 +58,9 @@ tfenv use latest
 
 ---
 
-## 5. 動作確認
+### 
+
+## 6. 動作確認
 
 `terraform` コマンドが正しく実行できるか、バージョンを確認する。
 
