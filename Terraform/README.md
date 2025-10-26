@@ -7,7 +7,7 @@ Terraformのバージョン管理ツール `tfenv` を使ってTerraformをイ�
 `tfenv` 本体をGitHubからクローンして配置する。
 
 ```bash
-git clone [https://github.com/tfutils/tfenv.git](https://github.com/tfutils/tfenv.git) ~/.tfenv
+git clone https://github.com/tfutils/tfenv.git ~/.tfenv
 ```
 
 ---
