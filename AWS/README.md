@@ -11,7 +11,7 @@ WSL2などのLinux環境にAWS CLI バージョン2をインストールし設�
 cd ~
 
 # インストーラーをダウンロード
-curl "[https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip](https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip)" -o "awscliv2.zip"
+curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 
 # unzipをインストール
 sudo apt update
