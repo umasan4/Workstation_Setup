@@ -17,16 +17,15 @@ yamlで定義していく
 ```yaml
 name: "Hello world"
   
-on: [push] # トリガ(何をしたら実行)
+on: [push] # トリガ(何をしたら実行する？)
   
-jobs:                       # ジョブ(実行する内容)
+jobs:                       # ジョブ(何を実行する？)
   test-job:                 # ジョブID(システムが参照)
     name: Hello world job   # ジョブ名(人間が参照するラベル)
     runs-on: ubuntu-latest  # 実行環境
     steps:                  # 実際に実行される内容
       - run: echo "Hello world !"
 ```
-
 
 ------------------------------------------------------------
 
