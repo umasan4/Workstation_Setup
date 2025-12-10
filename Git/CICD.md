@@ -1,30 +1,36 @@
-# CI/CD 学習メモ
+# Github Actions
 CI/CD環境を構築する手順や自己理解のためのメモ
 
-## 1. ワークフローを作成する
-- CI/CDを導入するリポジトリに以下の構造を作成する  
-workflows下に作成した.yml をワークフローファイルと呼ぶ
+## 1. 概要
 
-``` properties
+- ディレクトリ構成
+```properties
+# 実行する処理はワークフロー(YAML)に定義する
+
 └── .github
     └── workflows
-        └── <workflow_name>.yml
+        └── <name>.yml
 ```
 
-## 2. ワークフローの中身を定義する
-yamlで定義していく
-
+## 2. ワークフロー / workflow
 ```yaml
+# workflow は、次の3層で構成される
+# (1) workflow : YAMLファイルそのもの、1つの自動化プロセス
+# (2) job      : 処理の塊、jobは並列で実行される、job単位で仮想マシンが用意される
+# (3) step     : 処理の最小単位、Jobの中で実行される（上から順に実行）
+
+# workflow サンプルコード
 name: "Hello world"
   
-on: [push] # トリガ(何をしたら実行する？)
+on: [push]
   
-jobs:                       # ジョブ(何を実行する？)
-  test-job:                 # ジョブID(システムが参照)
-    name: Hello world job   # ジョブ名(人間が参照するラベル)
-    runs-on: ubuntu-latest  # 実行環境
-    steps:                  # 実際に実行される内容
-      - run: echo "Hello world !"
+jobs:
+  test-job:                       # ジョブID(機械が参照)
+    name: Hello world job         # ジョブ名(人間が参照)
+    runs-on: ubuntu-latest        # 実行環境
+    steps:
+      - name: Say hello           # stepにも名前を付けると良い
+        run: echo "Hello world !"　
 ```
 
 ------------------------------------------------------------
