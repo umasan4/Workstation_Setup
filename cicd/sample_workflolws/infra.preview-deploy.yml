@@ -1,0 +1,156 @@
+# CICDのうち、CIを記述してコードのチェックなどを行う
+name: "infra preview & deploy"
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 10_infra/**
+      - .github/workflows/**
+  workflow_dispatch:
+
+# github actions操作権限
+permissions:
+  id-token: write
+  contents: read
+
+# 変数
+env:
+  AWS_REGION: ap-northeast-1
+  TF_VERSION: 1.10.0
+  TF_PROJECT: cicd-practice
+  TF_ENVIRONMENT: dev
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "10_infra/"
+
+jobs:
+#------------------------------
+# perview
+#------------------------------
+  preview:
+    name: "preview"
+    runs-on: ubuntu-latest
+    outputs:
+      TF_PLAN_EXITCODE: ${{ steps.plan.outputs.exitcode }}
+      # ~.exitcode... terraform planの実行結果(0,1,2)を取得
+    steps:
+
+      # --- Setup Phase ---
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+          
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+
+      # --- Validate Phase ---
+      - name: terraform fmt
+        run: |
+          terraform fmt -check
+
+      - name: terraform init
+        run: |
+          terraform init -no-color
+
+      - name: terraform validate
+        run: |
+          terraform validate -no-color
+
+      # --- Plan Phase ---
+      - name: terraform plan
+        continue-on-error: true
+        # continue-on-error... 2(変更あり)でも処理を続ける
+        # 2は本来、エラーとして扱われる
+        id: plan
+        run: |
+          terraform plan \
+            -var 'project=${{ env.TF_PROJECT }}' \
+            -var 'environment=${{ env.TF_ENVIRONMENT }}' \
+            -var 'username=${{ secrets.MYSQL_USERNAME }}' \
+            -var 'password=${{ secrets.MYSQL_PASSWORD }}' \
+            -input=false \
+            -no-color \
+            -detailed-exitcode
+
+      # --- Notify Phase ---
+      - name: Slack Notify
+        if: steps.plan.outputs.exitcode == 2 # 2の場合のみ通知
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Terraform Plan Result"
+          SLACK_MESSAGE: "ワークフローが終了しました"
+          SLACK_COLOR: ${{ job.status }} 
+            # ${{ job.status }}... 
+            # GitHub Actions が自動的に結果を代入する
+            # Slackのサイドバーの色を Successならば緑といった具合に変更する
+#------------------------------
+# deploy
+#------------------------------
+  deploy:
+    name: "deploy"
+    needs: preview
+    if: needs.preview.outputs.TF_PLAN_EXITCODE == 2
+    # terraform planで結果が2(変更あり)の場合のみ実行する
+    environment: production #承認フロー実装のため追加
+    runs-on: ubuntu-latest
+    steps:
+      # --- Setup Phase ---
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+
+      # --- Validate Phase ---
+      - name: terraform fmt
+        run: |
+          terraform fmt -check
+
+      - name: terraform init
+        run: |
+          terraform init -no-color
+
+      # --- Apply Phase ---
+      - name: terraform apply
+        run: |
+          terraform apply \
+            -var 'project=${{ env.TF_PROJECT }}' \
+            -var 'environment=${{ env.TF_ENVIRONMENT }}' \
+            -var 'username=${{ secrets.MYSQL_USERNAME }}' \
+            -var 'password=${{ secrets.MYSQL_PASSWORD }}' \
+            -input=false \
+            -no-color \
+            -auto-approve
+      
+      # --- Notify Phase ---
+      - name: Slack Notify
+        if: always() # 前のステップの結果に関わらず実行させる
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Terraform Apply Result"
+          SLACK_MESSAGE: "ワークフローが終了しました"
+          SLACK_COLOR: ${{ job.status }} 
+            # ${{ job.status }}... 
+            # GitHub Actions が自動的に結果を代入する
+            # Slackのサイドバーの色を Successならば緑といった具合に変更する

@@ -1,0 +1,63 @@
+name: "infra destroy"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: ap-northeast-1
+  TF_VERSION: 1.10.0
+  TF_PROJECT: cicd-practice
+  TF_ENVIRONMENT: dev
+
+defaults:
+  run:
+    shell: bash
+    working-directory: "10_infra/"
+
+jobs:
+  destroy:
+    name: "destroy"
+    runs-on: ubuntu-latest
+    environment: production # 承認フローなどがあれば適用されます
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: terraform setup
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+
+      - name: terraform init
+        run: |
+          terraform init -no-color
+
+      - name: terraform destroy
+        run: |
+          terraform destroy \
+            -var 'project=${{ env.TF_PROJECT }}' \
+            -var 'environment=${{ env.TF_ENVIRONMENT }}' \
+            -var 'username=${{ secrets.MYSQL_USERNAME }}' \
+            -var 'password=${{ secrets.MYSQL_PASSWORD }}' \
+            -input=false \
+            -no-color \
+            -auto-approve
+
+      - name: Slack Notify
+        if: always()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Terraform Destroy Result"
+          SLACK_MESSAGE: "インフラ削除フローが終了しました"
+          SLACK_COLOR: ${{ job.status }}
