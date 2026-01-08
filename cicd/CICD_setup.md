@@ -28,7 +28,7 @@
     2. setup terraform      : 
     3. terraform fmt        : 
     4. configure creds      : 
-    5. terraform init       : 
+    5. terraform init       : 1~5までは先と同じ
     6. terraform apply      : AWSリソースを作成
     7. slack notify         : Slackに通知
     ```
@@ -38,12 +38,6 @@
 - 認証プロトコルの1つで、長期的なアクセスキー（Access Key ID / Secret Access Key）の発行・管理を不要にするキーレスな認証方式。Terraformに一時的にAWSアクセスを許可する。
 
 - OIDCの仕組みは以下の通り
-    ```
-    1. AWS側で「このGitHubリポジトリなら信頼する」という IDプロバイダ と IAMロール を設定
-    2. GitHub Actions実行時に、AWSへ「信頼の証（トークン）」を提示
-    3. AWSが検証し、問題なければ一時的な認証情報を発行
-    4. Terraform等は、その一時情報を使ってAWSを操作する
-    ```
     ```mermaid
     sequenceDiagram
     participant GH as GitHub Actions
@@ -55,11 +49,17 @@
     AWS-->>GH: 3. 一時的な認証情報(STS)を発行
     GH->>AWS: 4. Terraformコマンド実行
     ```
+    ```properties
+    1. AWS側で「このGitHubリポジトリなら信頼する」という IDプロバイダ と IAMロール を設定
+    2. GitHub Actions実行時に、AWSへ「信頼の証（トークン）」を提示
+    3. AWSが検証し、問題なければ一時的な認証情報を発行
+    4. Terraform等は、その一時情報を使ってAWSを操作する
+    ```
 
 ------------------------------
 ### 2-2. OIDCのセットアップ
 - 必要な設定は以下の通り
-    ```
+    ```properties
     a. AWS上で [IDプロバイダ] を作成  
     b. AWS上で [IAMロール] を作成  
     c. WorkflowファイルにPermissionを定義
@@ -69,13 +69,9 @@
 - AWS側で「このGitHubリポジトリなら信頼する」 というIDプロバイダを設定する
     ```properties
     1. AWSコンソール → IAM → IDプロバイダにアクセス
-
     2. <プロバイダの追加> ボタンを選択
-    
     3. プロバイダのタイプ <OpenID Connect> を選択
-    
     4. プロバイダ名 <https://token.actions.githubusercontent.com> を入力
-    
     5. 対象者 <sts.amazonaws.com> を入力
     ```
 
@@ -83,16 +79,12 @@
 - AWS側で「このGitHubリポジトリなら信頼する」 というIAMロールを設定する
     ```properties
     1. AWSコンソール → IAM → IDロールにアクセス
-    
     2. <ロールを作成>ボタンを選択
-    
     3. 信頼されたエンティティタイプ <web Identity> を選択
-    
     4. アイデンティティプロバイダ <~githubusercontent.com> を選択
        # 先の手順で作成したプロバイダ名を選択する
-
-    5. Audience <sts.amazonaws.com> を選択
     
+    5. Audience <sts.amazonaws.com> を選択
     6. Github Organization <Githubのユーザ名 or 組織名> を入力
        # GitHubのリポジトリURLが https://github.com/hogehoge/my-repo の場合、hogehoge の部分
        
@@ -112,7 +104,7 @@
             "token.actions.githubusercontent.com:sub": [
                 "repo:{name or org}/{repository}:*" 
                 # ↑ 接続リポジトリを制限できる（デフォルトで全リポジトリアクセスが許可されている）
-                # - GitHubのリポジトリURLが https://github.com/hogehoge/my-repo の場合、
+                #   GitHubのリポジトリURLが https://github.com/hogehoge/my-repo の場合、
                 #   hogehoge/my-repo の部分を張り付ける事でそのリポジトリにアクセス可能になる
             ]
         }
@@ -120,7 +112,7 @@
     ```
 ------------------------------
 #### c. Workflow
-- Github ActionsのAPIを実行する際に必要な権限を設定する
+- Github ActionsのAPIを実行する際に必要な権限を設定し接続テストを行う
     ```properties
     1. エディタで対象のローカルリポジトリを開く
     2. ルートに <.github/workflows> の入れ子でディレクトリを2つ作成
@@ -128,33 +120,47 @@
     ```
     ```yaml
     4. 作成した.ymlファイルに以下の通り記述
+    ※ コメントアウトした1~3には、自身の環境の値を記述する
     
-    name: "github action test code"
+    name: "OIDC Connection Test"
 
     on:
-    push:
+      push:
         branches:
-        - main
+          - main
         paths:
-        - #<terraformコードが格納されたディレクトリパス>/**
-        - .github/workflows/**
-    workflow_dispatch:
+          - 'path/to/terraform/**'  # 1. Terraformコードを格納したディレクトリパス
+          - '.github/workflows/**'
+      workflow_dispatch:
 
     permissions:
-    id-token: write # Githubが発行するトークンを取得する権限
-    contents: read  # リポジトリのコードを読み取る権限
+      id-token: write # GitHubが発行するトークンを取得する権限
+      contents: read  # リポジトリのコードを読み取る権限
 
     jobs:
-    preview:
-        name: "preview"
+      test-auth:
         runs-on: ubuntu-latest
         steps:
-        - run: |
-            echo "Hello World."
+          - name: Checkout
+            uses: actions/checkout@v4
+
+          - name: Configure AWS Credentials
+            uses: aws-actions/configure-aws-credentials@v4
+            with:
+              aws-region: ap-northeast-1        # 2. Terraform側で指定したリージョン
+              role-to-assume: arn:aws:iam::...  # 3. 先ほど作成したIAMロールのARN
+
+          - name: Verify Identity
+            run: aws sts get-caller-identity
     ```
     ```properties
     5. 記述後、main ブランチに .ymlファイルをpush
-    6. github → 対象リポジトリ → Actionsを開く
-    7. ログに Hello World. が出力されていたら成功
+    6. GitHub → 対象リポジトリ → Actionsタブを開く
+    7. 実行されたワークフローのログを確認し、以下のようなJSONが出力されていれば成功
+       {
+           "UserId": "AROAXXXXXXXXXXXXXXXXX:GitHubActions",
+           "Account": "123456789012",
+           "Arn": "arn:aws:sts::123456789012:assumed-role/YourRoleName/GitHubActions"
+       }
     ```
 ------------------------------
