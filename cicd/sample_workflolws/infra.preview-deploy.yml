@@ -58,6 +58,7 @@ jobs:
       - name: terraform fmt
         run: |
           terraform fmt -check
+        # -check: 結果が正ならば0を返す
 
       - name: terraform init
         run: |
