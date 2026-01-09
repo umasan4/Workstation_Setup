@@ -13,7 +13,7 @@
     2. Setup Terraform      : Terraform実行環境のセットアップ
     3. Configure AWS Creds  : OIDCを利用したAWS認証（一時クレデンシャルの取得）
     4. Terraform init       : バックエンドの初期化とプラグインのダウンロード
-    5. Terraform fmt        : コードフォーマットの検証（Lintチェック）
+    5. Terraform format     : コードフォーマットの検証（Lintチェック）
     6. Terraform validate   : 構文（シンタックス）の正当性検証
     7. Terraform plan       : 実行計画の作成（変更内容のプレビュー）
     8. Slack Notify         : 実行結果の通知
@@ -26,12 +26,14 @@
 
     1. checkout             : 
     2. setup terraform      : 
-    3. terraform fmt        : 
+    3. terraform format     : 
     4. configure creds      : 
     5. terraform init       : 1~5までは先と同じ
     6. terraform apply      : AWSリソースを作成
     7. slack notify         : Slackに通知
     ```
+  ※ terraform format でﾌｫｰﾏｯﾄ確認の前に fmt で整形したらいいのでは？  
+     → NG: ｿｰｽｺｰﾄﾞではなくRnnner(Github仮想ﾏｼﾝ)内のｺｰﾄﾞを整形するだけ
 
 ## 2. OIDC
 ### 2-1. OIDCとは
