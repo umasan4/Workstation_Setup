@@ -53,16 +53,19 @@ jobs:
         with:
           aws-region: ${{ env.AWS_REGION }}
           role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+        # GithubのシークレットにIAMロールのARNを登録しておく
+        # Github → repo → settings → Secrets and vars → Actions → New repo secret
 
       # --- Validate Phase ---
       - name: terraform fmt
         run: |
           terraform fmt -check
-        # -check: 結果が正ならば0を返す
+        # -check: ﾌｫｰﾏｯﾄが正ならば0を返す
 
       - name: terraform init
         run: |
           terraform init -no-color
+        # -no-color: ｶﾗｰｺｰﾄﾞを無効化(ﾛｸﾞ出力用)
 
       - name: terraform validate
         run: |
