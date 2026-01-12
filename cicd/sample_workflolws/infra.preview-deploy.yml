@@ -96,8 +96,7 @@ jobs:
           SLACK_TITLE: "Terraform Plan Result"
           SLACK_MESSAGE: "ワークフローが終了しました"
           SLACK_COLOR: ${{ job.status }} 
-            # ${{ job.status }}... 
-            # GitHub Actions が自動的に結果を代入する
+            # ${{ job.status }}...GitHub Actions が自動的に結果を代入する
             # Slackのサイドバーの色を Successならば緑といった具合に変更する
 #------------------------------
 # deploy

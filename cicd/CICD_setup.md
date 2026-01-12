@@ -10,7 +10,7 @@
     # 主にPull Request時に実行される
 
     1. Checkout             : ソースコードのチェックアウト
-    2. Setup Terraform      : Terraform実行環境のセットアップ
+    2. Terraform Setup      : Terraform実行環境のセットアップ
     3. Configure AWS Creds  : OIDCを利用したAWS認証（一時クレデンシャルの取得）
     4. Terraform init       : バックエンドの初期化とプラグインのダウンロード
     5. Terraform format     : コードフォーマットの検証（Lintチェック）
@@ -25,7 +25,7 @@
     # 主にmainブランチへマージされた時に実行される
 
     1. checkout             : 
-    2. setup terraform      : 
+    2. Terraform Setup      : 
     3. terraform format     : 
     4. configure creds      : 
     5. terraform init       : 1~5までは先と同じ
