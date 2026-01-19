@@ -23,8 +23,13 @@ git --version
 GitHubアカウントと一致させること。
 
 ```bash
+# 登録
 git config --global user.name "Your Name"
 git config --global user.email "your.email@example.com"
+
+# 確認
+git config user.name
+git config user.email
 ```
 
 ---
