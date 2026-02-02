@@ -43,8 +43,3 @@
   echo "HOST_NAME  : $(uname -n)"
   echo "USER_NAME  : ${USER}"
   echo "-------------------------------------"
-
-#-------------------------------------
-# tfenv
-#-------------------------------------
-  export PATH="$HOME/.tfenv/bin:$PATH"
